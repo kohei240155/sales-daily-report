@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+dist
+build
+.cache
+public
+*.config.js
+*.config.mjs
+next-env.d.ts
