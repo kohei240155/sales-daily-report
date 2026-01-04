@@ -1,12 +1,69 @@
+# dependencies
 node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
 .next
 out
-dist
 build
+dist
 .cache
-public
+
+# production
+*.log
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local env files
+.env
+.env.*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# prisma
+prisma/migrations
+
+# openapi
+openapi
+
+# git
+.git
+.gitignore
+
+# docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# package manager
 package-lock.json
-pnpm-lock.yaml
 yarn.lock
+pnpm-lock.yaml
+
+# public
+public
+
+# minified files
 *.min.js
 *.min.css
+
+# husky
+.husky

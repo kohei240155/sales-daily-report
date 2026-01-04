@@ -1,10 +1,62 @@
+# dependencies
 node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
 .next
 out
-dist
 build
+dist
 .cache
+
+# production
+*.log
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local env files
+.env
+.env.*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# prisma
+prisma/migrations
+
+# openapi
+openapi
+
+# git
+.git
+.gitignore
+
+# docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# public
 public
+
+# config files
 *.config.js
 *.config.mjs
-next-env.d.ts
+*.config.ts
