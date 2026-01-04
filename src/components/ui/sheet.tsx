@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
@@ -77,7 +78,7 @@ SheetContent.displayName = SheetPrimitive.Content.displayName
 const SheetHeader = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: React.HTMLAttributes<HTMLDivElement>): React.JSX.Element => (
   <div
     className={cn(
       "flex flex-col space-y-2 text-center sm:text-left",
@@ -91,7 +92,7 @@ SheetHeader.displayName = "SheetHeader"
 const SheetFooter = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: React.HTMLAttributes<HTMLDivElement>): React.JSX.Element => (
   <div
     className={cn(
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",

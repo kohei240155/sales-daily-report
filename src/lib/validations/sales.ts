@@ -2,45 +2,114 @@ import { z } from 'zod'
 
 /**
  * 営業担当者作成の入力スキーマ
+ * API仕様: POST /sales
+ *
+ * バリデーションルール:
+ * - sales_name: 必須、最大100文字
+ * - email: 必須、メールアドレス形式、一意、最大255文字
+ * - password: 必須、8文字以上
+ * - password_confirm: 必須、passwordと一致
+ * - department: 必須、最大100文字
+ * - position: 必須、最大50文字
+ *
+ * 権限: 管理者のみ作成可能
  */
-export const createSalesSchema = z.object({
-  sales_name: z.string().min(1, '営業担当者名を入力してください').max(100, '営業担当者名は100文字以内で入力してください'),
-  email: z.string().email('正しいメールアドレス形式で入力してください'),
-  password: z.string().min(8, 'パスワードは8文字以上で入力してください'),
-  password_confirm: z.string().min(8, 'パスワード（確認）は8文字以上で入力してください'),
-  department: z.string().min(1, '部署を入力してください').max(100, '部署は100文字以内で入力してください'),
-  position: z.string().min(1, '役職を選択してください').max(50, '役職は50文字以内で入力してください'),
-}).refine((data) => data.password === data.password_confirm, {
-  message: 'パスワードとパスワード（確認）が一致しません',
-  path: ['password_confirm'],
-})
+export const createSalesSchema = z
+  .object({
+    sales_name: z
+      .string()
+      .min(1, '営業担当者名を入力してください')
+      .max(100, '営業担当者名は100文字以内で入力してください'),
+    email: z
+      .string()
+      .min(1, 'メールアドレスを入力してください')
+      .email('正しいメールアドレス形式で入力してください')
+      .max(255, 'メールアドレスは255文字以内で入力してください'),
+    password: z
+      .string()
+      .min(8, 'パスワードは8文字以上で入力してください'),
+    password_confirm: z
+      .string()
+      .min(8, 'パスワード（確認）は8文字以上で入力してください'),
+    department: z
+      .string()
+      .min(1, '部署を入力してください')
+      .max(100, '部署は100文字以内で入力してください'),
+    position: z
+      .string()
+      .min(1, '役職を選択してください')
+      .max(50, '役職は50文字以内で入力してください'),
+  })
+  .refine((data) => data.password === data.password_confirm, {
+    message: 'パスワードとパスワード（確認）が一致しません',
+    path: ['password_confirm'],
+  })
 
 /**
  * 営業担当者更新の入力スキーマ
+ * API仕様: PUT /sales/{sales_id}
+ *
+ * バリデーションルール:
+ * - sales_name: 必須、最大100文字
+ * - email: 必須、メールアドレス形式、最大255文字
+ * - password: 任意、指定した場合のみ更新、8文字以上
+ * - password_confirm: passwordが指定されている場合は必須
+ * - department: 必須、最大100文字
+ * - position: 必須、最大50文字
+ *
+ * 権限: 管理者のみ更新可能
  */
-export const updateSalesSchema = z.object({
-  sales_name: z.string().min(1, '営業担当者名を入力してください').max(100, '営業担当者名は100文字以内で入力してください'),
-  email: z.string().email('正しいメールアドレス形式で入力してください'),
-  password: z.string().min(8, 'パスワードは8文字以上で入力してください').optional().or(z.literal('')),
-  password_confirm: z.string().optional().or(z.literal('')),
-  department: z.string().min(1, '部署を入力してください').max(100, '部署は100文字以内で入力してください'),
-  position: z.string().min(1, '役職を選択してください').max(50, '役職は50文字以内で入力してください'),
-}).refine(
-  (data) => {
-    // パスワードが入力されている場合のみ確認
-    if (data.password && data.password.length > 0) {
-      return data.password === data.password_confirm
+export const updateSalesSchema = z
+  .object({
+    sales_name: z
+      .string()
+      .min(1, '営業担当者名を入力してください')
+      .max(100, '営業担当者名は100文字以内で入力してください'),
+    email: z
+      .string()
+      .min(1, 'メールアドレスを入力してください')
+      .email('正しいメールアドレス形式で入力してください')
+      .max(255, 'メールアドレスは255文字以内で入力してください'),
+    password: z
+      .string()
+      .min(8, 'パスワードは8文字以上で入力してください')
+      .optional()
+      .or(z.literal('')),
+    password_confirm: z.string().optional().or(z.literal('')),
+    department: z
+      .string()
+      .min(1, '部署を入力してください')
+      .max(100, '部署は100文字以内で入力してください'),
+    position: z
+      .string()
+      .min(1, '役職を選択してください')
+      .max(50, '役職は50文字以内で入力してください'),
+  })
+  .refine(
+    (data) => {
+      // パスワードが入力されている場合のみ確認
+      if (data.password && data.password.length > 0) {
+        return data.password === data.password_confirm
+      }
+      return true
+    },
+    {
+      message: 'パスワードとパスワード（確認）が一致しません',
+      path: ['password_confirm'],
     }
-    return true
-  },
-  {
-    message: 'パスワードとパスワード（確認）が一致しません',
-    path: ['password_confirm'],
-  }
-)
+  )
 
 /**
  * 営業担当者検索の入力スキーマ
+ * API仕様: GET /sales
+ *
+ * クエリパラメータ:
+ * - sales_name: 営業担当者名（任意、部分一致）
+ * - department: 部署（任意）
+ * - page: ページ番号（デフォルト: 1）
+ * - per_page: 1ページあたりの件数（デフォルト: 20、最大: 100）
+ *
+ * 権限: 管理者のみ検索可能
  */
 export const searchSalesSchema = z.object({
   sales_name: z.string().optional().or(z.literal('')),

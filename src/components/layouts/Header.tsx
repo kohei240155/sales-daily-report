@@ -1,9 +1,13 @@
-// src/components/layouts/Header.tsx
 'use client'
+
+import React, { type FC } from 'react'
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { FileText, Users, UserCog, LogOut, Menu } from 'lucide-react'
+
+import { LogOut, Menu } from 'lucide-react'
+
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,193 +17,174 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu'
-import { cn } from '@/lib/utils'
-import type { User } from '@/lib/auth/session'
 
 interface HeaderProps {
-  user: User
-  isAdmin: boolean
+  user?: {
+    sales_name: string
+    email: string
+    position: string
+  }
 }
 
-interface NavItem {
-  href: string
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-  adminOnly?: boolean
-}
-
-const navItems: NavItem[] = [
-  {
-    href: '/daily-reports',
-    label: '日報一覧',
-    icon: FileText,
-  },
-  {
-    href: '/customers',
-    label: '顧客マスタ',
-    icon: Users,
-    adminOnly: true,
-  },
-  {
-    href: '/sales',
-    label: '営業マスタ',
-    icon: UserCog,
-    adminOnly: true,
-  },
-]
-
-export function Header({ user, isAdmin }: HeaderProps): JSX.Element {
+export const Header: FC<HeaderProps> = ({ user }) => {
   const pathname = usePathname()
   const router = useRouter()
 
-  // フィルタリング: 管理者権限が必要なアイテムをチェック
-  const filteredNavItems = navItems.filter(
-    (item) => !item.adminOnly || isAdmin
-  )
-
-  // ユーザーのイニシャルを取得
-  const getInitials = (email: string): string => {
-    return email.charAt(0).toUpperCase()
-  }
-
-  // ログアウト処理
   const handleLogout = async (): Promise<void> => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
       router.push('/login')
-      router.refresh()
     } catch (error) {
-      console.error('Logout failed:', error)
+      console.error('ログアウトエラー:', error)
     }
   }
 
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const navigationItems = [
+    { href: '/daily-reports', label: '日報一覧', requireAdmin: false },
+    { href: '/customers', label: '顧客マスタ', requireAdmin: false },
+    { href: '/sales', label: '営業マスタ', requireAdmin: true },
+  ]
+
+  const isAdmin = user?.position === '管理者' || user?.position === '部長'
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* ロゴ・システム名 */}
-        <div className="flex items-center gap-6">
+      <div className="container flex h-16 items-center">
+        {/* システム名 */}
+        <div className="mr-8 flex items-center">
           <Link href="/daily-reports" className="flex items-center space-x-2">
-            <FileText className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">
-              営業日報システム
-            </span>
+            <span className="text-xl font-bold">営業日報システム</span>
           </Link>
-
-          {/* デスクトップナビゲーション */}
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              {filteredNavItems.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname.startsWith(item.href)
-
-                return (
-                  <NavigationMenuItem key={item.href}>
-                    <Link href={item.href} legacyBehavior passHref>
-                      <NavigationMenuLink
-                        className={cn(
-                          navigationMenuTriggerStyle(),
-                          isActive &&
-                            'bg-accent text-accent-foreground font-semibold'
-                        )}
-                      >
-                        <Icon className="mr-2 h-4 w-4" />
-                        {item.label}
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
-                )
-              })}
-            </NavigationMenuList>
-          </NavigationMenu>
         </div>
 
-        {/* 右側: ユーザーメニュー */}
-        <div className="flex items-center gap-4">
-          {/* ユーザードロップダウン */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="relative h-10 w-10 rounded-full"
+        {/* デスクトップナビゲーション */}
+        <nav className="hidden md:flex flex-1 items-center space-x-6 text-sm font-medium">
+          {navigationItems.map((item) => {
+            if (item.requireAdmin && !isAdmin) return null
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`transition-colors hover:text-foreground/80 ${
+                  pathname.startsWith(item.href)
+                    ? 'text-foreground'
+                    : 'text-foreground/60'
+                }`}
               >
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {user.department} / {user.position}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                ログアウト
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {item.label}
+              </Link>
+            )
+          })}
+        </nav>
 
-          {/* モバイルメニュー */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">メニューを開く</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-64">
-              <nav className="flex flex-col gap-4">
-                <div className="mb-4">
-                  <p className="text-sm font-medium">{user.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {user.department} / {user.position}
-                  </p>
-                </div>
-                {filteredNavItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = pathname.startsWith(item.href)
+        {/* ユーザーメニュー */}
+        <div className="flex items-center space-x-4">
+          {user && (
+            <>
+              {/* デスクトップユーザーメニュー */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="hidden md:flex relative h-10 w-10 rounded-full"
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>
+                        {getInitials(user.sales_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.sales_name}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.position}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>ログアウト</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                      )}
+              {/* モバイルメニュー */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden"
+                    aria-label="メニューを開く"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <nav className="flex flex-col space-y-4">
+                    <div className="flex items-center space-x-4 pb-4 border-b">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback>
+                          {getInitials(user.sales_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user.sales_name}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.position}
+                        </p>
+                      </div>
+                    </div>
+                    {navigationItems.map((item) => {
+                      if (item.requireAdmin && !isAdmin) return null
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`text-sm font-medium transition-colors hover:text-foreground/80 ${
+                            pathname.startsWith(item.href)
+                              ? 'text-foreground'
+                              : 'text-foreground/60'
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    })}
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={handleLogout}
                     >
-                      <Icon className="h-5 w-5" />
-                      {item.label}
-                    </Link>
-                  )
-                })}
-                <Button
-                  variant="ghost"
-                  className="justify-start"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  ログアウト
-                </Button>
-              </nav>
-            </SheetContent>
-          </Sheet>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      ログアウト
+                    </Button>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </>
+          )}
         </div>
       </div>
     </header>
