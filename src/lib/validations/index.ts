@@ -4,6 +4,9 @@ export * from './auth'
 // 日報関連のバリデーション
 export * from './daily-report'
 
+// 訪問記録関連のバリデーション
+export * from './visit-record'
+
 // 顧客関連のバリデーション
 export * from './customer'
 
