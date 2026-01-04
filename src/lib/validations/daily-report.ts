@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { visitRecordInputSchema, visitRecordUpdateInputSchema } from './visit-record'
 
 /**
