@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # PostgreSQLデータベース
+  db:
+    image: postgres:15-alpine
+    container_name: sales-daily-report-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sales_daily_report
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.jsアプリケーション
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sales-daily-report-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/sales_daily_report
+      - JWT_SECRET=your-secret-key-here-change-in-production
+      - JWT_EXPIRES_IN=24h
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # 開発時のホットリロード用（本番環境では不要）
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  postgres_data:
