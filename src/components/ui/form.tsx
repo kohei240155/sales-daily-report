@@ -1,19 +1,19 @@
 "use client"
 
 import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot"
-import {
-  Controller,
-  FormProvider,
-  useFormContext,
-  type ControllerProps,
-  type FieldPath,
-  type FieldValues,
-} from "react-hook-form"
 
-import { cn } from "@/lib/utils"
+import { Slot } from "@radix-ui/react-slot"
+import { Controller, FormProvider, useFormContext } from "react-hook-form"
+
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+
+import type * as LabelPrimitive from "@radix-ui/react-label"
+import type {
+  ControllerProps,
+  FieldPath,
+  FieldValues,
+} from "react-hook-form"
 
 const Form = FormProvider
 
@@ -31,7 +31,7 @@ const FormField = <
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
 >({
   ...props
-}: ControllerProps<TFieldValues, TName>) => {
+}: ControllerProps<TFieldValues, TName>): React.JSX.Element => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
@@ -39,7 +39,18 @@ const FormField = <
   )
 }
 
-const useFormField = () => {
+const useFormField = (): {
+  id: string
+  name: string
+  formItemId: string
+  formDescriptionId: string
+  formMessageId: string
+  error?: { message?: string }
+  invalid: boolean
+  isDirty: boolean
+  isTouched: boolean
+  isValidating: boolean
+} => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
   const { getFieldState, formState } = useFormContext()
